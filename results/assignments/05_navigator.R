@@ -4,6 +4,9 @@ library(ggplot2)
 runoff_year_key <- readRDS('data/runoff_year_key.rds')
 runoff_month_key <- readRDS('data/runoff_month_key.rds')
 runoff_day <- readRDS('data/runoff_day.rds')
+runoff_summer <- readRDS('data/runoff_summer.rds')
+runoff_winter <- readRDS('data/runoff_winter.rds')
+runoff_summary <- readRDS('data/runoff_summary.rds')
 colset_4 <-  c("#D35C37", "#BF9A77", "#D6C6B9", "#97B8C2")
 key_stations <- c('DOMA', 'BASR', 'KOEL')
 
@@ -59,3 +62,46 @@ ggplot(runoff_day_key_class[season == 'winter' | season == 'summer'],
   ylab(label = "Days") +
   theme_bw()
 
+#task 3
+#loess
+runoff_winter[, value_norm := scale(value), sname]
+runoff_summer[, value_norm := scale(value), sname]
+n_stations <- nrow(runoff_summary)
+
+ggplot(runoff_winter[year > 1950 & year <= 2010], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'loess', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+  ggtitle('Winter runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (z-score)") +
+  theme_bw()
+#this plot makes it seem like there is a big recent decrease in runoff
+#but we can see that the runoff stabilizes after 2010 and starts increasing again
+
+ggplot(runoff_summer[year > 1950 & year <= 2010], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'loess', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+  ggtitle('Summer runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (z-score)") +
+  theme_bw()
+#this plot does not show the recent increase in runoff, just a drop
+
+#linear r
+ggplot(runoff_winter[year > 1950 & year <= 2010], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'lm', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+  ggtitle('Winter runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (z-score)") +
+  theme_bw()
+#there is no recent increase as with loess, shows a steady increase
+
+ggplot(runoff_summer[year > 1950 & year <= 2010], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'lm', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+  ggtitle('Summer runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (z-score)") +
+  theme_bw()
+#again shows steady decrease, but some information is lost

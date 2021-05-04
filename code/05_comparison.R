@@ -58,6 +58,14 @@ ggplot(to_plot, aes(x = mean_day, y = area)) +
   ylab(label = "Runoff (m3/s)") +
   theme_bw()
 
+ggplot(to_plot, aes(x = mean_day, y = area)) +
+  geom_point(aes(col = category), cex = 3) +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = 0, col = colset_4[1]) +
+  scale_color_manual(values = colset_4[c(2, 3, 4)]) +
+  xlab(label = "Area (km3)") +
+  ylab(label = "Runoff (m3/s)") +
+  theme_bw()
+
 ggplot() +
   geom_point(data = to_plot, aes(x = mean_day, y = area, col = category), cex = 3) +
   geom_smooth(data = to_plot[c(1:7)], aes(x = mean_day, y = area), 
@@ -66,6 +74,14 @@ ggplot() +
               method = 'lm', formula = y~x, se = 0, col = colset_4[1]) +
   geom_smooth(data = to_plot[c(12:17)], aes(x = mean_day, y = area), 
               method = 'lm', formula = y~x, se = 0, col = colset_4[1]) +
+  scale_color_manual(values = colset_4[c(2, 3, 4)]) +
+  xlab(label = "Area (km3)") +
+  ylab(label = "Runoff (m3/s)") +
+  theme_bw()
+
+ggplot(to_plot, aes(x = mean_day, y = area)) +
+  geom_point(aes(col = category), cex = 3) +
+  geom_smooth(method = 'loess', formula = y ~ x, se = 0, col = colset_4[1]) +
   scale_color_manual(values = colset_4[c(2, 3, 4)]) +
   xlab(label = "Area (km3)") +
   ylab(label = "Runoff (m3/s)") +
@@ -102,7 +118,7 @@ ggplot(runoff_winter[year > 1950], aes(x = year, y = value_norm, col = sname)) +
   scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
   ggtitle('Winter runoff') +
   xlab(label = "Year") +
-  ylab(label = "Runoff (m3/s)") +
+  ylab(label = "Runoff (z-score)") +
   theme_bw()
 
 ggplot(runoff_summer[year > 1950], aes(x = year, y = value_norm, col = sname)) +
@@ -110,7 +126,7 @@ ggplot(runoff_summer[year > 1950], aes(x = year, y = value_norm, col = sname)) +
   scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
   ggtitle('Summer runoff') +
   xlab(label = "Year") +
-  ylab(label = "Runoff (m3/s)") +
+  ylab(label = "Runoff (z-score)") +
   theme_bw()
 
 year_thres <- 1980
