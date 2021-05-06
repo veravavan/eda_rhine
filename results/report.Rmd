@@ -10,10 +10,6 @@ knitr::opts_knit$set(root.dir = 'C:/Users/User/Desktop/UNI/Classes/2nd semester/
 ```
 
 ```{r, include=FALSE}
-getwd()
-```
-
-```{r, include=FALSE}
 library(ggplot2)
 library(data.table)
 
