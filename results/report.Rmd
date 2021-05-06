@@ -4,7 +4,7 @@ author: "Vera Vavan"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_knit$set(root.dir = 'C:/Users/User/Desktop/UNI/Classes/2nd semester/Exploratory Data Analysis/eda_rhine_project')
 ```
 
