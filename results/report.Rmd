@@ -5,12 +5,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = T)
 knitr::opts_knit$set(root.dir = 'C:/Users/User/Desktop/UNI/Classes/2nd semester/Exploratory Data Analysis/eda_rhine_project')
-```
-
-```{r, include=FALSE}
-getwd()
 ```
 
 ```{r, include=FALSE}
