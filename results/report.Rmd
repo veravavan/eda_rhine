@@ -1,0 +1,120 @@
+---
+title: "EDA report on the Rhine basin"
+author: "Vera Vavan"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = T)
+knitr::opts_knit$set(root.dir = 'C:/Users/User/Desktop/UNI/Classes/2nd semester/Exploratory Data Analysis/eda_rhine_project')
+```
+
+```{r, include=FALSE}
+getwd()
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(data.table)
+
+runoff_summary <- readRDS('./data/runoff_summary.rds')
+runoff_summer <- readRDS('./data/runoff_summer.rds')
+runoff_winter <- readRDS('./data/runoff_winter.rds')
+runoff_summer_key <- readRDS('./data/runoff_summer_key.rds')
+runoff_winter_key <- readRDS('./data/runoff_winter_key.rds')
+
+colset_4 <- c("#D35C37", "#BF9A77", "#D6C6B9", "#97B8C2")
+
+```
+<style>
+body {
+text-align: justify}
+</style>
+
+## Introduction
+Our exploration was inspired by the research done by Middelkoop et al. in 2001 presented in the paper called [_Impact of Climate Change on Hydrological Regimes and Water Resources Management in the Rhine Basin_](https://www.researchgate.net/publication/200043966_Impact_of_Climate_Change_on_Hydrological_Regimes_and_Water_Resources_Management_in_the_Rhine_Basin). 
+
+As the paper includes predictions regarding the runoff in the Rhine basin, we made it our task to explore the latest data and see whether these predictions are starting to take place years after the paper was published.
+
+The main assumption from Middelkoop and colleagues was that there is going to be an increase in river discharge during winter months and a decrease in summer months. This would be a result of a decrease in snow precipitation and accumulation, which leads to more snow melt in winter and less snow melt in summer.
+
+## Preparation
+The data that we used came from 17 stations, all located at different parts of the river. We had information about the stations, as well as the documented daily runoff values. By looking at the station locations and runoff values, we shortly noticed that the location and topography has a large influence on our data, and we had to take it into account. 
+
+Some runoff values were recorded a long time ago, even in 1814, but unfortunately that was not the case for all stations. Some stations only started recording data in 1950s, therefore we had to limit our analysis only to data from 1964 to 2016. The described year range was chosen as 2016 is the year after which most stations stopped recording data, and 1964 is 2 climatic periods before. We also used different age ranges to present certain data, in order to examine the trends that took place.
+
+After cleaning our data and turning it into a tidy format, we noticed some patterns between the stations. By examining these patterns, we noticed that we could classify each stations based on area, altitude, runoff size and location on the river. These classifications have made it easier to spot changes in the runoff at different locations, since the runoff values naturally differ in different parts of the basin. The classifications and main variables can be seen in the table below. 
+```{r, echo = FALSE}
+knitr::kable(runoff_summary[, .(sname, country, area, altitude, start, end, area_class, alt_class, runoff_class, category)], digits = 2)
+```
+
+To make the graphs cleaner and easier to examine, we decided to focus on three main stations that could represent their categories, since examining all 17 stations would make it less clear. Those stations are DOMAT/EMS (DOMA), BASEL, RHEINHALLE (BASR) and KOELN (KOEL). 
+
+## Exploration
+After all the cleaning and transformations to our data, we could finally plot our data to see whether there are any major changes in the runoff. In order to fully see if the hypothesis by Middelkoop came true, we divided our data in summer and winter runoff, as well as runoff before and after 2000.
+```{r, echo = FALSE, fig.align='center'}
+year_thres <- 2000
+
+runoff_winter_key[year < year_thres, period := factor('pre_2000')]
+runoff_winter_key[year >= year_thres, period := factor('aft_2000')]
+runoff_summer_key[year < year_thres, period := factor('pre_2000')]
+runoff_summer_key[year >= year_thres, period := factor('aft_2000')]
+
+to_plot <- rbind(cbind(runoff_winter_key, season = factor('winter')), 
+                       cbind(runoff_summer_key, season = factor('summer'))) 
+
+ggplot(to_plot, aes(season, value, fill = period)) +
+  geom_boxplot() +
+  facet_wrap(~sname, scales = 'free_y') +
+  scale_fill_manual(values = colset_4[c(4, 1)]) +
+  xlab(label = "Season") +
+  ylab(label = "Runoff (m3/s)") +
+  theme_bw()
+```
+
+In the plot above we can see how the runoff changed before and after the year 2000, but only in our main three stations. The changes are more intense in the smaller and upstream catchments, which is represented by DOMA. We can notice a significant shift after 2000, in both summer and winter. There is an increase in runoff in winter, and a decrease in summer. But even though we chose these three stations to represent the changes in other stations, we cannot make any main conclusions without also examining the rest of our data, but in a different way.
+
+## Final plots
+As a result of our exploration, we were able to plot the runoff changes in every station. We decided to produce plots using regression analysis, especially using loess models for both summer and winter, which can be seen below. 
+```{r, echo = FALSE, fig.align='center'}
+runoff_winter[, value_norm := scale(value), sname]
+runoff_summer[, value_norm := scale(value), sname]
+n_stations <- nrow(runoff_summary)
+
+ggplot(runoff_winter[year > 1950], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'loess', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+  ggtitle('Winter runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (m3/s)") +
+  theme_bw()
+```
+This graph plots loess regression for each station. On the right side we can see all the stations, sorted from the most upstream location, to the most downstream. Immediately, we can see that there are two lines that do not entirely correspond to the rest of the data, and those are DIER and DOMA, which are both classified as upstream.
+
+Besides that, the graph shows an increase in runoff right over the years,and in the years right before 2000 we observe a small decrease, then it starts to slowly increase. We can also notice that the lines that are more red, which represent upstream stations in the Alpine area, have a bigger increase in runoff. This can be explained by the fact that these areas are affected more by snow melt, than the downstream areas.
+
+However, we need to keep in mind that the loess regression model cannot be fully trusted on the edges of the time range, so let us examine the summer runoff.
+```{r, echo = FALSE, fig.align='center'}
+ggplot(runoff_summer[year > 1950], aes(x = year, y = value_norm, col = sname)) +
+  geom_smooth(method = 'loess', formula = y~x, se = 0) + 
+  scale_color_manual(values = colorRampPalette(colset_4)(n_stations)) +
+    ggtitle('Summer runoff') +
+  xlab(label = "Year") +
+  ylab(label = "Runoff (m3/s)") +
+  theme_bw()
+```
+
+This graph shows the summer runoff in the same way as the previous graph. Again, we can see that the stations DOMA and DIER do not correspond to the rest of the data completely, especially DOMA.
+
+Apart from that, the graph shows an overall slight decrease in the runoff. Right before the year 2000 there is a big decrease, which might show us the motivation for Middelkoop to do the research. However, after the year 2000, we see an increase in the runoff. We can also notice that at the edges of the time interval there is bigger variation between the stations, since the lines are further apart. There is a bigger increase in the stations that are more downstream, and a smaller one in the other stations. This can again be explained by the fact that the upstream areas are more affected by snow melt, which is predicted to decrease in summer, so these stations face a bigger decrease than the downstream stations. However, we should consider this part of the graph with great uncertainty.
+
+After analyzing these graphs, we decided to try and find the reason for such differences in upstream stations compared to other stations. Afterwards, we found out that a dam was constructed near DOMA which has greatly altered the flow of Rhine in this area ever since 1960s. This explains the deviation, however it leaves us with uncertainty about the reliability of our results, since this station has been used as one of the main stations that represents the flow. 
+
+## Conclusions
+After examining the graphs provided by our exploration, we came to a few conclusions and possible improvements. We were able to see the predicted changes in runoff on multiple occasions, however, the final graphs shows some different aspects.
+
+Firstly, we noticed that there was a general increase in winter runoff and a decrease in summer runoff in Rhine compared to the runoff 60 years ago. However, if we consider only the period right before the year 2000 and after, these changes are not shown in the same effect, especially summer runoff. This is explained by the fact that enough time has not passed since the predictions made by Middelkoop to reflect a full climatic period. All things considered, if these trends continue, those predictions might take full effect in the upcoming years.
+
+Secondly, we observed greater changes in the Alpine area of the river, which was also one of Middelkoop's notes. These changes are reflected by the fact that this area is more dependent on snow changes than the downstream area that does not reflect the changes as much. However, we also need to take into account that the main station used to show the changes in the upstream area is DOMA, where the flow of the river was also altered by the external anthropogenic influences. 
+
+Overall, I believe that it is too soon to make any definite conclusions. There is proof that the changes that Middelkoop and colleagues predicted are starting to take place, but we should keep monitoring the changes in the runoff and be prepared for these changes, since there has already been cases of floods and droughts in the Rhine basin. However, if we were to repeat this exploration a few years later, I would definitely reconsider choosing the DOMA station as one of the main stations.
