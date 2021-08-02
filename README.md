@@ -1,4 +1,4 @@
-Code for the course of Exploratory Data Analysis of the Bachelor of Environmental Data Science.
+# Code for the course of Exploratory Data Analysis of the Bachelor of Environmental Data Science (work done during classes).
 
 Analysis hypothesis: The hydroclimatic changes predicted by Middelkoop et al. (2001) are happening across the Rhine basin.
 
@@ -19,3 +19,5 @@ Script description:
 04_classification.R Divides the data into categories.
 
 05_comparison.R Compares the data by years and seasons by making plots.
+
+Full report published at https://rpubs.com/verav/765897
